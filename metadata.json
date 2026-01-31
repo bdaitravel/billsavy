@@ -1,7 +1,9 @@
 {
-  "name": "BillSavy - Tu Ahorro Inteligente",
-  "description": "Gestiona facturas de hogar y coche, controla renovaciones y ahorra con el análisis experto de la IA de BillSavy.",
+  "name": "BillSavy OS - Tu CFO Autónomo",
+  "description": "Control de gastos predictivo, arbitraje de seguros y optimización de facturas con IA.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "microphone",
+    "geolocation"
   ]
 }

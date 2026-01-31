@@ -34,6 +34,7 @@ export interface Asset {
   detail?: string;
   limit?: number;
   provider?: string;
+  status?: 'active' | 'warning' | 'optimizing';
 }
 
 export interface Expense {
@@ -46,7 +47,8 @@ export interface Expense {
   description: string;
   isRecurring: boolean;
   expiryDate?: string;
-  predictedValue?: number; // Nueva propiedad para Predictive Cash Flow
+  predictedValue?: number;
+  source?: 'manual' | 'bank' | 'email';
 }
 
 export interface UserProfile {
@@ -54,6 +56,8 @@ export interface UserProfile {
   email: string;
   isLoggedIn: boolean;
   tier: 'free' | 'premium';
+  isBankConnected: boolean;
+  isEmailConnected: boolean;
 }
 
 export interface AIRecommendation {
@@ -74,7 +78,6 @@ export interface FinancialHealth {
   leakageAlerts: number;
 }
 
-// Added ConsumerRight interface to fix missing export error.
 export interface ConsumerRight {
   title: string;
   description: string;
