@@ -14,17 +14,13 @@ export enum Category {
 }
 
 export enum AssetType {
-  // Propiedades
   HOUSE = 'Vivienda',
   COMMERCIAL = 'Local Comercial',
   STORAGE = 'Trastero/Garaje',
-  // Vehículos
   VEHICLE_CAR = 'Coche',
   VEHICLE_MOTO = 'Moto',
-  // Finanzas
   CREDIT_CARD = 'Tarjeta de Crédito',
   LOAN = 'Préstamo/Hipoteca',
-  // Seguros
   INSURANCE_HOME = 'Seguro de Hogar',
   INSURANCE_LIFE = 'Seguro de Vida',
   INSURANCE_MEDICAL = 'Seguro Médico',
@@ -35,8 +31,8 @@ export interface Asset {
   id: string;
   name: string;
   type: AssetType;
-  detail?: string; // Dirección, Modelo, o Número de cuenta
-  limit?: number;  // Para tarjetas
+  detail?: string;
+  limit?: number;
   provider?: string;
 }
 
@@ -50,24 +46,37 @@ export interface Expense {
   description: string;
   isRecurring: boolean;
   expiryDate?: string;
+  predictedValue?: number; // Nueva propiedad para Predictive Cash Flow
 }
 
 export interface UserProfile {
   name: string;
   email: string;
   isLoggedIn: boolean;
-}
-
-export interface ConsumerRight {
-  title: string;
-  description: string;
-  lawReference: string;
+  tier: 'free' | 'premium';
 }
 
 export interface AIRecommendation {
+  id: string;
   category: Category;
   currentCost: number;
   potentialCost: number;
   reasoning: string;
   action: string;
+  confidence: number;
+  isAutomatedSwitchAvailable: boolean;
+}
+
+export interface FinancialHealth {
+  score: number;
+  monthlySavings: number;
+  yearlyProjection: number;
+  leakageAlerts: number;
+}
+
+// Added ConsumerRight interface to fix missing export error.
+export interface ConsumerRight {
+  title: string;
+  description: string;
+  lawReference: string;
 }
