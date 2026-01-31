@@ -33,36 +33,36 @@ const App: React.FC = () => {
   const NavButton = ({ id, icon, label }: { id: any, icon: string, label: string }) => (
     <button 
       onClick={() => setActiveTab(id)}
-      className={`flex flex-col items-center justify-center w-12 h-10 rounded-xl transition-all ${activeTab === id ? 'bg-white/10 text-teal-400 shadow-xl border border-white/5' : 'text-slate-500 hover:text-slate-300'}`}
+      className={`flex flex-col items-center justify-center w-14 h-11 rounded-xl transition-all ${activeTab === id ? 'bg-white/10 text-teal-400 shadow-xl border border-white/5' : 'text-slate-500 hover:text-slate-300'}`}
     >
-      <span className="text-sm">{icon}</span>
-      <span className="text-[6px] font-black uppercase tracking-widest mt-0.5">{label}</span>
+      <span className="text-base">{icon}</span>
+      <span className="text-[7px] font-black uppercase tracking-widest mt-0.5">{label}</span>
     </button>
   );
 
   return (
     <div className="h-screen w-full bg-[#020617] text-white flex flex-col overflow-hidden font-['Plus_Jakarta_Sans']">
       
-      {/* Header Compacto con Botón de Atrás Dinámico */}
-      <header className="px-6 py-4 flex justify-between items-center border-b border-white/5 bg-[#020617]/90 backdrop-blur-xl z-50">
+      {/* Header con Safe Area Padding para iPhone */}
+      <header className="px-6 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex justify-between items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-50">
         <div className="flex items-center gap-3">
           {activeTab !== 'inicio' ? (
             <button 
               onClick={() => setActiveTab('inicio')}
-              className="w-9 h-9 bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all text-teal-400 shadow-lg"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all text-teal-400 shadow-lg"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
           ) : (
-            <div className="w-9 h-9 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-teal-400 font-extrabold text-sm mb-0.5">B</span>
+            <div className="w-10 h-10 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-teal-400 font-extrabold text-base mb-0.5">B</span>
             </div>
           )}
           <div className="flex flex-col">
-            <h1 className="text-[9px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY</h1>
-            <p className="text-[6px] font-bold text-teal-400 uppercase tracking-tighter mt-1 opacity-80">Control Total</p>
+            <h1 className="text-[10px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY</h1>
+            <p className="text-[7px] font-bold text-teal-400 uppercase tracking-tighter mt-1 opacity-80">Control Total</p>
           </div>
         </div>
         
@@ -89,8 +89,8 @@ const App: React.FC = () => {
         {activeTab === 'derechos' && <ConsumerRights />}
       </main>
 
-      {/* Billy Chat - Posicionado para no tapar el botón principal */}
-      <div className="fixed bottom-24 right-4 z-[60]">
+      {/* Billy Chat - Botón ajustado para área segura inferior */}
+      <div className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] right-4 z-[60]">
         <BillyChat expenses={expenses} assets={assets} />
       </div>
 

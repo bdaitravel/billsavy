@@ -94,10 +94,10 @@ const BillyChat: React.FC<BillyChatProps> = ({ expenses, assets }) => {
         </div>
       )}
 
-      {/* Botón Flotante: Icono de bocadillo latente, difuminado y pequeño */}
+      {/* Botón Flotante: Ajustado para no colisionar y ser discreto */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 z-[100] border border-white/10 animate-latent backdrop-blur-md ${isOpen ? 'bg-slate-800' : 'bg-slate-800/80 hover:bg-teal-600/90'}`}
+        className={`w-11 h-11 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 z-[100] border border-white/10 animate-latent backdrop-blur-md ${isOpen ? 'bg-slate-800' : 'bg-slate-800/80 hover:bg-teal-600/90'}`}
       >
         {isOpen ? (
           <span className="text-white text-lg font-light">×</span>
