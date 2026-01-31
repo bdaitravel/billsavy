@@ -1,0 +1,7 @@
+{
+  "name": "BillSavy - Tu Ahorro Inteligente",
+  "description": "Gestiona facturas de hogar y coche, controla renovaciones y ahorra con el análisis experto de la IA de BillSavy.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
