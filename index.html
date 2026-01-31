@@ -10,34 +10,44 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-fintech: #f8fafc;
+            --primary-emerald: #10b981;
+        }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #fcfdfe;
+            background: radial-gradient(circle at top right, #f0fdf4, transparent 40%),
+                        radial-gradient(circle at bottom left, #eff6ff, transparent 40%),
+                        var(--bg-fintech);
+            background-attachment: fixed;
+            min-height: 100vh;
         }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); }
-        .fintech-shadow { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fintech { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+        .fintech-shadow { box-shadow: 0 20px 50px -12px rgba(0,0,0,0.05); }
         
-        /* Custom scrollbar para Look & Feel Pro */
-        ::-webkit-scrollbar { width: 6px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fintech { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4"
-  }
-}
-</script>
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+        "recharts": "https://esm.sh/recharts@^3.7.0",
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "react": "https://esm.sh/react@^19.2.4"
+      }
+    }
+    </script>
 </head>
-<body class="text-slate-900 min-h-screen">
+<body class="text-slate-900">
     <div id="root"></div>
+    <!-- CRÍTICO: Este script es el que arranca la aplicación -->
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>
