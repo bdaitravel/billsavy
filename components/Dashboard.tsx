@@ -1,130 +1,193 @@
 
-import React from 'react';
-import { Expense, Asset, Category, FinancialHealth } from '../types';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import React, { useState } from 'react';
+import { Expense, Asset } from '../types';
+import { BarChart, Bar, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface DashboardProps {
   expenses: Expense[];
   assets: Asset[];
-  onSeeAdvice: () => void;
+  onAction: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses, assets, onSeeAdvice }) => {
-  const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
-  // Simulación de Predictive Cash Flow para el gráfico
-  const chartData = [
-    { month: 'Ene', real: 450, pred: 450 },
-    { month: 'Feb', real: 380, pred: 380 },
-    { month: 'Mar', real: 410, pred: 410 },
-    { month: 'Abr', real: totalSpent > 0 ? totalSpent : 390, pred: 400 },
-    { month: 'May', real: null, pred: 420 },
-    { month: 'Jun', real: null, pred: 480 },
+const data = [
+  { mes: 'Ene', gasto: 420, ahorro: 15 },
+  { mes: 'Feb', gasto: 380, ahorro: 55 },
+  { mes: 'Mar', gasto: 510, ahorro: 30 },
+  { mes: 'Abr', gasto: 290, ahorro: 95 },
+  { mes: 'May', gasto: 340, ahorro: 110 },
+];
+
+const Dashboard: React.FC<DashboardProps> = ({ expenses, assets, onAction }) => {
+  const [selectedBadge, setSelectedBadge] = useState<null | number>(null);
+
+  const items = [
+    { label: 'Luz', icon: '⚡' }, 
+    { label: 'Gas', icon: '🔥' },
+    { label: 'Agua', icon: '💧' }, 
+    { label: 'Tlf.', icon: '📱' },
+    { label: 'Seguros', icon: '🛡️' }, 
+    { label: 'Coche', icon: '🚗' },
+    { label: 'Hogar', icon: '🏠' },
+    { label: 'Suscrip.', icon: '📺' },
+    { label: 'Bancos', icon: '🏦' },
+    { label: 'Impuestos', icon: '🏛️' },
+    { label: 'Comunidad', icon: '👥' },
   ];
 
-  const healthScore = Math.min(100, 65 + (expenses.length * 2));
-  const yearlySavings = totalSpent * 0.15; // Estimación 15% ahorro unicornio
+  const badges = [
+    { icon: '🥇', label: 'Consciente', desc: 'Has registrado todos tus gastos básicos.', active: true },
+    { icon: '🔍', label: 'Auditor', desc: 'Has analizado más de 10 facturas con Billy.', active: true },
+    { icon: '🏎️', label: 'Ruta', desc: 'Control total sobre los gastos de tu vehículo.', active: false },
+    { icon: '💡', label: 'Zen', desc: 'Sin alertas de renovación pendientes hoy.', active: false },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner: Financial Pulse */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
-          <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Financial Health Score</p>
-          <div className="flex items-end gap-2">
-            <h2 className="text-5xl font-black">{healthScore}</h2>
-            <span className="text-emerald-400 font-bold mb-2">/100</span>
+    <div className="h-full flex flex-col justify-between overflow-hidden py-1 space-y-4 relative">
+      
+      {/* Header Stat Cards */}
+      <div className="grid grid-cols-12 gap-3 min-h-[160px]">
+        {/* Left Card: Score, Badges & Ranking */}
+        <div className="col-span-6 bg-white/5 p-4 rounded-[2.5rem] flex flex-col justify-between border border-white/10 relative overflow-hidden">
+          <div className="z-10 flex justify-between items-start">
+            <div>
+              <span className="text-[7px] font-black text-teal-400 uppercase tracking-[0.2em] block mb-1">Score de Control</span>
+              <div className="flex items-baseline gap-1">
+                <h3 className="text-3xl font-black text-white">840</h3>
+                <span className="text-[8px] text-teal-400 font-bold">pts</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[6px] font-black text-slate-500 uppercase block leading-tight">Posición en<br/>tu ciudad</span>
+              <span className="text-[10px] font-black text-white">#190</span>
+            </div>
           </div>
-          <div className="mt-6 flex gap-1">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full ${i < healthScore/10 ? 'bg-emerald-500' : 'bg-slate-800'}`}></div>
+          
+          {/* Sección de Insignias Interactiva */}
+          <div className="flex gap-2 mt-2 z-10 relative">
+            {badges.map((b, i) => (
+              <button 
+                key={i} 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedBadge(selectedBadge === i ? null : i);
+                }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border transition-all transform active:scale-90 ${b.active ? 'bg-teal-500/20 border-teal-500/40 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-white/5 border-white/5 opacity-30 grayscale'}`}
+              >
+                {b.icon}
+              </button>
             ))}
+            
+            {/* Tooltip informativo de insignia mejorado (MODAL) */}
+            {selectedBadge !== null && (
+              <div 
+                className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
+                onClick={() => setSelectedBadge(null)}
+              >
+                <div className="bg-[#020617] border-2 border-teal-500/50 p-8 rounded-[2.5rem] w-full max-w-[260px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-pop text-center" onClick={e => e.stopPropagation()}>
+                  <div className="text-5xl mb-4 drop-shadow-lg">{badges[selectedBadge].icon}</div>
+                  <h4 className="text-[11px] font-black text-teal-400 uppercase tracking-[0.2em] mb-3">{badges[selectedBadge].label}</h4>
+                  <p className="text-[12px] text-slate-300 leading-relaxed font-medium mb-6">"{badges[selectedBadge].desc}"</p>
+                  <button onClick={() => setSelectedBadge(null)} className="w-full py-3 bg-teal-500 text-navy-deep rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-teal-400 transition-colors">Entendido</button>
+                </div>
+              </div>
+            )}
           </div>
-          <p className="mt-4 text-slate-400 text-xs font-medium">Estás en el top 12% de ahorradores de tu zona.</p>
+
+          <div className="mt-3 z-10">
+            <div className="h-1 bg-white/10 rounded-full overflow-hidden mb-1">
+               <div className="h-full bg-teal-400 w-[84%] shadow-[0_0_8px_#2dd4bf]"></div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex flex-col">
+                <span className="text-[6px] font-black text-slate-400 uppercase">Savy XP: 2.450</span>
+                <span className="text-[5px] text-slate-500 font-bold uppercase tracking-tighter">Puntos por control de facturas</span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-[7px] font-black text-teal-400 uppercase tracking-tighter">Vigilancia</span>
+                <span className="text-[7px] font-black text-white uppercase">85% Protegido</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Ahorro Anual Proyectado</p>
-          <h2 className="text-4xl font-black text-slate-900">~{yearlySavings.toFixed(0)}€</h2>
-          <p className="mt-2 text-emerald-600 font-bold text-sm flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/></svg>
-            +22% vs mes anterior
-          </p>
-          <button onClick={onSeeAdvice} className="mt-6 w-full py-3 bg-emerald-50 text-emerald-700 rounded-2xl font-bold text-sm hover:bg-emerald-100 transition-all">
-            Optimizar Cartera
-          </button>
-        </div>
-
-        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Fugas Detectadas</p>
-          <h2 className="text-4xl font-black text-rose-500">2</h2>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 bg-slate-50 p-2 rounded-lg">
-              <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-              SUSCRIPCIÓN DUPLICADA: NETFLIX
+        {/* Right Card: Gasto vs Ahorro Chart */}
+        <div className="col-span-6 bg-white/5 p-4 rounded-[2.5rem] border border-white/10 flex flex-col relative overflow-hidden">
+          <div className="absolute top-4 left-4 flex gap-4 z-10">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
+              <span className="text-[6px] font-black text-slate-500 uppercase tracking-widest">Gasto</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 bg-slate-50 p-2 rounded-lg">
-              <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-              SUBIDA DE TARIFA: ENDESA (+12€)
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+              <span className="text-[6px] font-black text-teal-400 uppercase tracking-widest">Ahorro</span>
             </div>
+          </div>
+          <div className="flex-1 mt-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} margin={{ top: 0, right: 0, left: -40, bottom: 0 }}>
+                <Tooltip 
+                  cursor={{fill: 'rgba(255,255,255,0.03)'}}
+                  contentStyle={{ background: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '8px', color: 'white' }} 
+                />
+                <Bar dataKey="gasto" fill="#1e293b" radius={[2, 2, 0, 0]} barSize={6} />
+                <Bar dataKey="ahorro" fill="#2dd4bf" radius={[2, 2, 0, 0]} barSize={6} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Main Chart: Predictive Cash Flow */}
-      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h3 className="text-xl font-black text-slate-900">Predictive Cash Flow</h3>
-            <p className="text-sm text-slate-400 font-medium">IA detectando picos de gasto futuros.</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-              <span className="text-xs font-bold text-slate-500">Real</span>
+      {/* Mosaico de Círculos Perfecto (11 categorías + 1 añadir = 12 total, 4x3) */}
+      <div className="flex-1 overflow-y-auto py-2">
+        <div className="grid grid-cols-4 gap-x-2 gap-y-6">
+          {items.map((item, idx) => (
+            <div key={idx} className="flex flex-col items-center gap-1.5 group cursor-pointer" onClick={onAction}>
+              <div className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-base transition-all group-hover:scale-110 group-hover:border-teal-500/50 group-hover:bg-teal-500/10 shadow-lg">
+                 <span>{item.icon}</span>
+              </div>
+              <span className="text-[6px] font-black uppercase text-slate-500 group-hover:text-white tracking-tighter text-center leading-none">{item.label}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-slate-200 rounded-full"></div>
-              <span className="text-xs font-bold text-slate-500">IA Forecast</span>
+          ))}
+          {/* Botón Mosaico Especial (+) Integrado en la cuadrícula */}
+          <div className="flex flex-col items-center gap-1.5 group cursor-pointer" onClick={onAction}>
+            <div className="w-11 h-11 rounded-full bg-teal-500/10 border-2 border-dashed border-teal-500/40 flex items-center justify-center text-lg text-teal-400 transition-all group-hover:scale-110 group-hover:bg-teal-500/20 group-hover:border-teal-500">
+               <span>＋</span>
             </div>
+            <span className="text-[6px] font-black uppercase text-teal-400 tracking-tighter">Añadir</span>
           </div>
-        </div>
-        
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} fontSize={12} tick={{fill: '#94a3b8', fontWeight: 600}} dy={10} />
-              <YAxis hide />
-              <Tooltip 
-                contentStyle={{borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}}
-                itemStyle={{fontWeight: 800}}
-              />
-              <Area type="monotone" dataKey="pred" stroke="#e2e8f0" strokeWidth={3} fill="transparent" strokeDasharray="5 5" />
-              <Area type="monotone" dataKey="real" stroke="#10b981" strokeWidth={4} fillOpacity={1} fill="url(#colorReal)" />
-            </AreaChart>
-          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Quick Action: Insurance Arbitrage */}
-      <div className="bg-emerald-600 rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-emerald-100">
-        <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center text-3xl">🛡️</div>
-          <div>
-            <h4 className="text-xl font-black">Insurance Arbitrage Activo</h4>
-            <p className="text-emerald-100 text-sm font-medium">He encontrado un seguro de coche con las mismas coberturas por 142€ menos.</p>
+      {/* Renovaciones Section */}
+      <div className="flex flex-col gap-3 pb-2">
+        <div className="bg-slate-900/50 p-4 rounded-[2rem] border border-white/5">
+          <div className="flex justify-between items-center mb-3">
+             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Renovaciones Próximas</span>
+             <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center bg-white/5 p-2 px-3 rounded-xl border border-white/5">
+               <div className="flex items-center gap-2">
+                 <span className="text-xs">🚗</span>
+                 <span className="text-[9px] font-bold text-white">Seguro Coche</span>
+               </div>
+               <span className="text-[8px] font-black text-slate-400">12 MAYO</span>
+            </div>
+            <div className="flex justify-between items-center bg-white/5 p-2 px-3 rounded-xl border border-white/5">
+               <div className="flex items-center gap-2">
+                 <span className="text-xs">📺</span>
+                 <span className="text-[9px] font-bold text-white">Netflix Premium</span>
+               </div>
+               <span className="text-[8px] font-black text-slate-400">28 MAYO</span>
+            </div>
           </div>
         </div>
-        <button onClick={onSeeAdvice} className="bg-white text-emerald-700 px-8 py-4 rounded-2xl font-black text-sm hover:bg-emerald-50 transition-all whitespace-nowrap shadow-lg">
-          Cambiar y Ahorrar con 1-Click
+
+        <button 
+          onClick={onAction}
+          className="w-full py-5 bg-teal-500 text-slate-950 rounded-[1.8rem] font-black text-[11px] uppercase tracking-[0.3em] shadow-[0_15px_30px_rgba(45,212,191,0.2)] hover:bg-teal-400 transition-all active:scale-95 z-10"
+        >
+          Analizar Factura o Contrato
         </button>
       </div>
     </div>

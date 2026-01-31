@@ -1,5 +1,5 @@
 {
-  "name": "billsavy-os---tu-cfo-autónomo",
+  "name": "billsavy-os",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,7 @@
   "dependencies": {
     "@google/genai": "^1.39.0",
     "react-dom": "^19.2.4",
-    "recharts": "^3.7.0",
+    "recharts": "^2.15.0",
     "react": "^19.2.4"
   },
   "devDependencies": {

@@ -30,14 +30,16 @@ export const analyzeBillImage = async (base64Image: string) => {
             },
           },
           {
-            text: `Eres el motor OCR de BillSavy OS. 
-            Analiza esta factura y extrae:
-            1. Proveedor (Nombre exacto).
-            2. Importe total con IVA.
-            3. Fecha de emisión.
-            4. Categoría financiera.
-            5. Fecha de fin de permanencia o renovación (CRÍTICO).
-            6. Análisis de anomalías: ¿Es más alta que la media? ¿Hay cargos extraños?`,
+            text: `Eres el motor de auditoría avanzada de BillSavy OS. 
+            Analiza este documento (puede ser una factura o un contrato). 
+            Extrae con precisión quirúrgica:
+            1. Proveedor y CIF si aparece.
+            2. Importe total o cuota mensual estimada.
+            3. Categoría (Luz, Seguros, Coche, etc.).
+            4. ALERTAS DE CONTRATO: ¿Hay permanencia? ¿El precio es superior a la media de mercado actual en España? ¿Hay servicios extra como "mantenimiento" que suelen ser innecesarios?
+            5. Fecha de vencimiento o renovación.
+            
+            Devuelve un resumen ejecutivo para el usuario.`,
           },
         ],
       },
@@ -65,16 +67,8 @@ export const analyzeBillImage = async (base64Image: string) => {
 export const getFinancialAdvice = async (expenses: any[], assets: any[]) => {
   return handleAIRequest(async () => {
     const ai = createAIInstance();
-    const prompt = `Eres el "Unicorn CFO Agent" de BillSavy. 
-    Analiza esta cartera de gastos domésticos en España: ${JSON.stringify(expenses)}. 
-    Tu objetivo es maximizar el flujo de caja del usuario.
-    
-    Busca:
-    1. Oportunidades de "Insurance Arbitrage": ¿Qué seguros son caros hoy?
-    2. Cambios de comercializadora eléctrica (Mercado libre vs Regulado).
-    3. Suscripciones "zombie" (olvidadas).
-    
-    Devuelve un plan de ataque agresivo.`;
+    const prompt = `Analiza estos gastos: ${JSON.stringify(expenses)}. 
+    Genera un plan de ahorro agresivo. Compara con las mejores tarifas actuales de PVPC, mercado libre y seguros low-cost en España.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
@@ -90,8 +84,7 @@ export const getFinancialAdvice = async (expenses: any[], assets: any[]) => {
               currentCost: { type: Type.NUMBER },
               potentialCost: { type: Type.NUMBER },
               reasoning: { type: Type.STRING },
-              action: { type: Type.STRING },
-              isAutomatedSwitchAvailable: { type: Type.BOOLEAN }
+              action: { type: Type.STRING }
             },
             required: ["category", "currentCost", "potentialCost", "reasoning", "action"]
           }
@@ -102,13 +95,12 @@ export const getFinancialAdvice = async (expenses: any[], assets: any[]) => {
   });
 };
 
-// Added getConsumerRights to fix missing export error in ConsumerRights component.
 export const getConsumerRights = async () => {
   return handleAIRequest(async () => {
     const ai = createAIInstance();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: "Genera una lista de 4 derechos del consumidor clave en España relacionados con suministros (luz, gas, internet) y seguros. Incluye la referencia legal simplificada.",
+      contents: "Lista 4 derechos de defensa del consumidor en España ante eléctricas y aseguradoras.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {

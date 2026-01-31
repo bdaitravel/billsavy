@@ -1,145 +1,84 @@
 
-import React, { useState, useEffect } from 'react';
-import { Asset, AssetType, Expense, Category, AIRecommendation, UserProfile } from './types';
+import React, { useState } from 'react';
+import { Asset, AssetType, Expense, UserProfile } from './types';
 import Dashboard from './components/Dashboard';
-import Sidebar from './components/Sidebar';
-import PropertyManager from './components/PropertyManager';
 import BillUploader from './components/BillUploader';
 import Recommendations from './components/Recommendations';
 import ConsumerRights from './components/ConsumerRights';
 import Login from './components/Login';
 import BillyChat from './components/BillyChat';
 import Onboarding from './components/Onboarding';
-import ConnectCenter from './components/ConnectCenter';
-import { getFinancialAdvice } from './services/geminiService';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile>({ 
-    name: '', 
-    email: '', 
-    isLoggedIn: false, 
-    tier: 'premium',
-    isBankConnected: false,
-    isEmailConnected: false
+    name: '', email: '', isLoggedIn: false, isBankConnected: false, isEmailConnected: false
   });
   
-  const [assets, setAssets] = useState<Asset[]>([
-    { id: '1', name: 'Vivienda Madrid', type: AssetType.HOUSE, detail: 'Calle Mayor 1', status: 'active' },
-    { id: '2', name: 'Tesla Model 3', type: AssetType.VEHICLE_CAR, detail: 'B-1234-XY', status: 'warning' }
+  const [assets] = useState<Asset[]>([
+    { id: '1', name: 'Mi Hogar', type: AssetType.HOUSE, status: 'active' },
+    { id: '2', name: 'Mi Coche', type: AssetType.VEHICLE, status: 'active' }
   ]);
   
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'activos' | 'subir' | 'ahorro' | 'derechos' | 'conexiones'>('dashboard');
-  const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
-  const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
+  const [activeTab, setActiveTab] = useState<'inicio' | 'escanear' | 'ahorro' | 'derechos'>('inicio');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('billsavy_v2_data');
-    if (saved) {
-      const { savedAssets, savedExpenses, savedUser } = JSON.parse(saved);
-      setAssets(savedAssets || assets);
-      setExpenses(savedExpenses || []);
-      if (savedUser) setUser(savedUser);
-    }
-  }, []);
+  if (!user.isLoggedIn) return (
+    <Login onLogin={(n, e, b, c) => { 
+      setUser({...user, name: n, email: e, birthDate: b, city: c, isLoggedIn: true}); 
+      setShowOnboarding(true); 
+    }} />
+  );
 
-  useEffect(() => {
-    localStorage.setItem('billsavy_v2_data', JSON.stringify({ savedAssets: assets, savedExpenses: expenses, savedUser: user }));
-  }, [assets, expenses, user]);
-
-  const handleLogin = (name: string, email: string) => {
-    setUser({ ...user, name, email, isLoggedIn: true });
-    setShowOnboarding(true);
-  };
-
-  const handleAddAsset = (asset: Asset) => setAssets([...assets, asset]);
-  const handleAddExpense = (expense: Expense) => {
-    setExpenses([{ ...expense, id: Math.random().toString(36).substr(2, 9) }, ...expenses]);
-    setActiveTab('dashboard');
-  };
-
-  const fetchAdvice = async () => {
-    if (expenses.length === 0 && !user.isBankConnected) return;
-    setIsLoadingAdvice(true);
-    try {
-      const advice = await getFinancialAdvice(expenses, assets);
-      setRecommendations(advice);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingAdvice(false);
-    }
-  };
-
-  if (!user.isLoggedIn) return <Login onLogin={handleLogin} />;
+  const NavButton = ({ id, icon, label }: { id: any, icon: string, label: string }) => (
+    <button 
+      onClick={() => setActiveTab(id)}
+      className={`flex flex-col items-center justify-center w-12 h-10 rounded-xl transition-all ${activeTab === id ? 'bg-white/10 text-teal-400 shadow-xl border border-white/5' : 'text-slate-500 hover:text-slate-300'}`}
+    >
+      <span className="text-sm">{icon}</span>
+      <span className="text-[6px] font-black uppercase tracking-widest mt-0.5">{label}</span>
+    </button>
+  );
 
   return (
-    <div className="flex h-screen bg-transparent overflow-hidden relative selection:bg-emerald-100 selection:text-emerald-900">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        user={user} 
-        onLogout={() => setUser({...user, isLoggedIn: false})} 
-      />
+    <div className="h-screen w-full bg-[#020617] text-white flex flex-col overflow-hidden font-['Plus_Jakarta_Sans']">
       
-      <main className="flex-1 overflow-y-auto p-4 md:p-10 scroll-smooth bg-slate-50/30">
-        <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 animate-fintech">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-              {activeTab === 'dashboard' && `Pulso Financiero`}
-              {activeTab === 'activos' && 'Patrimonio'}
-              {activeTab === 'subir' && 'Entrada de Datos'}
-              {activeTab === 'ahorro' && 'Motor de Arbitraje'}
-              {activeTab === 'derechos' && 'Escudo Legal'}
-              {activeTab === 'conexiones' && 'Fuentes de Datos'}
-            </h1>
-            <p className="text-slate-400 font-medium text-sm mt-1">
-              {activeTab === 'dashboard' && 'Tu IA está analizando 47 variables de mercado.'}
-              {activeTab === 'conexiones' && 'Automatiza la entrada de datos al 100%.'}
-              {activeTab === 'subir' && 'Sube facturas en PDF o JPG.'}
-            </p>
+      {/* Header Compacto */}
+      <header className="px-6 py-4 flex justify-between items-center border-b border-white/5 bg-[#020617]/90 backdrop-blur-xl z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
+            <span className="text-teal-400 font-extrabold text-sm mb-0.5">B</span>
           </div>
-          
-          <div className="flex items-center gap-3">
-            {!user.isBankConnected && activeTab !== 'conexiones' && (
-              <button 
-                onClick={() => setActiveTab('conexiones')}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100 hover:bg-emerald-100 transition-all"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                CONECTAR BANCO
-              </button>
-            )}
-            <button 
-              onClick={() => setActiveTab('subir')}
-              className="bg-slate-900 hover:bg-black text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-              Nueva Factura
-            </button>
+          <div className="flex flex-col">
+            <h1 className="text-[9px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY</h1>
+            <p className="text-[6px] font-bold text-teal-400 uppercase tracking-tighter mt-1 opacity-80">Control Total</p>
           </div>
-        </header>
-
-        <div className="max-w-6xl mx-auto animate-fintech">
-          {activeTab === 'dashboard' && <Dashboard expenses={expenses} assets={assets} onSeeAdvice={() => { setActiveTab('ahorro'); fetchAdvice(); }} />}
-          {activeTab === 'activos' && <PropertyManager assets={assets} onAdd={handleAddAsset} />}
-          {activeTab === 'subir' && <BillUploader assets={assets} onComplete={handleAddExpense} />}
-          {activeTab === 'ahorro' && <Recommendations recommendations={recommendations} onRefresh={fetchAdvice} isLoading={isLoadingAdvice} />}
-          {activeTab === 'derechos' && <ConsumerRights />}
-          {activeTab === 'conexiones' && (
-            <ConnectCenter 
-              user={user} 
-              onConnect={(type) => setUser({...user, [type === 'bank' ? 'isBankConnected' : 'isEmailConnected']: true})} 
-            />
-          )}
         </div>
+        
+        <div className="flex gap-1 bg-white/5 p-1 rounded-2xl border border-white/5">
+           <NavButton id="inicio" icon="⚡" label="Inicio" />
+           <NavButton id="ahorro" icon="💰" label="Ahorro" />
+           <NavButton id="derechos" icon="🛡️" label="Ayuda" />
+        </div>
+      </header>
+      
+      {/* Main Container */}
+      <main className="flex-1 p-5 overflow-hidden">
+        {activeTab === 'inicio' && <Dashboard expenses={expenses} assets={assets} onAction={() => setActiveTab('escanear')} />}
+        {activeTab === 'escanear' && (
+          <div className="h-full flex items-center justify-center">
+            <BillUploader assets={assets} onComplete={(exp) => { setExpenses([exp, ...expenses]); setActiveTab('inicio'); }} />
+          </div>
+        )}
+        {activeTab === 'ahorro' && <Recommendations recommendations={[]} isLoading={false} onRefresh={() => {}} />}
+        {activeTab === 'derechos' && <ConsumerRights />}
       </main>
 
-      <BillyChat expenses={expenses} assets={assets} />
+      {/* Billy Chat */}
+      <div className="fixed bottom-6 right-6 z-[60]">
+        <BillyChat expenses={expenses} assets={assets} />
+      </div>
+
       {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
     </div>
   );

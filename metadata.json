@@ -1,5 +1,5 @@
 {
-  "name": "BillSavy OS - Tu CFO Autónomo",
+  "name": "BillSavy OS ",
   "description": "Control de gastos predictivo, arbitraje de seguros y optimización de facturas con IA.",
   "requestFramePermissions": [
     "camera",
