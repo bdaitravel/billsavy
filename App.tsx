@@ -43,12 +43,23 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-full bg-[#020617] text-white flex flex-col overflow-hidden font-['Plus_Jakarta_Sans']">
       
-      {/* Header Compacto */}
+      {/* Header Compacto con Botón de Atrás Dinámico */}
       <header className="px-6 py-4 flex justify-between items-center border-b border-white/5 bg-[#020617]/90 backdrop-blur-xl z-50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-teal-400 font-extrabold text-sm mb-0.5">B</span>
-          </div>
+          {activeTab !== 'inicio' ? (
+            <button 
+              onClick={() => setActiveTab('inicio')}
+              className="w-9 h-9 bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all text-teal-400 shadow-lg"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          ) : (
+            <div className="w-9 h-9 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-teal-400 font-extrabold text-sm mb-0.5">B</span>
+            </div>
+          )}
           <div className="flex flex-col">
             <h1 className="text-[9px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY</h1>
             <p className="text-[6px] font-bold text-teal-400 uppercase tracking-tighter mt-1 opacity-80">Control Total</p>
@@ -67,15 +78,19 @@ const App: React.FC = () => {
         {activeTab === 'inicio' && <Dashboard expenses={expenses} assets={assets} onAction={() => setActiveTab('escanear')} />}
         {activeTab === 'escanear' && (
           <div className="h-full flex items-center justify-center">
-            <BillUploader assets={assets} onComplete={(exp) => { setExpenses([exp, ...expenses]); setActiveTab('inicio'); }} />
+            <BillUploader 
+              assets={assets} 
+              onComplete={(exp) => { setExpenses([exp, ...expenses]); setActiveTab('inicio'); }} 
+              onCancel={() => setActiveTab('inicio')}
+            />
           </div>
         )}
         {activeTab === 'ahorro' && <Recommendations recommendations={[]} isLoading={false} onRefresh={() => {}} />}
         {activeTab === 'derechos' && <ConsumerRights />}
       </main>
 
-      {/* Billy Chat */}
-      <div className="fixed bottom-6 right-6 z-[60]">
+      {/* Billy Chat - Posicionado para no tapar el botón principal */}
+      <div className="fixed bottom-24 right-4 z-[60]">
         <BillyChat expenses={expenses} assets={assets} />
       </div>
 
