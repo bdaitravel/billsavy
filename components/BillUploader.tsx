@@ -11,6 +11,7 @@ interface BillUploaderProps {
 const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<Partial<Expense> | null>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,33 +19,43 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setError(null);
     }
   };
 
   const handleScan = async () => {
     if (!file) return;
     setIsScanning(true);
+    setError(null);
 
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64String = (reader.result as string).split(',')[1];
-        const result = await analyzeBillImage(base64String);
-        setScanResult({
-          provider: result.provider,
-          amount: result.amount,
-          date: result.date,
-          category: result.category as Category,
-          expiryDate: result.expiryDate,
-          description: result.summary || `Factura de ${result.provider}`
-        });
-        setIsScanning(false);
+        try {
+          const base64String = (reader.result as string).split(',')[1];
+          const result = await analyzeBillImage(base64String);
+          setScanResult({
+            provider: result.provider,
+            amount: result.amount,
+            date: result.date,
+            category: result.category as Category,
+            expiryDate: result.expiryDate,
+            description: result.summary || `Factura de ${result.provider}`
+          });
+        } catch (err: any) {
+          if (err.message === "QUOTA_EXHAUSTED") {
+            setError("¡Uff! Billy está agotado por hoy (límite de cuota excedido). Intenta subir los datos manualmente o espera unos minutos.");
+          } else {
+            setError("No he podido leer la factura correctamente. ¿Puedes intentarlo con otra foto o rellenar los datos?");
+          }
+        } finally {
+          setIsScanning(false);
+        }
       };
       reader.readAsDataURL(file);
     } catch (err) {
-      console.error(err);
       setIsScanning(false);
-      alert("Error al escanear la factura. Por favor, introduce los datos manualmente.");
+      setError("Error al procesar la imagen.");
     }
   };
 
@@ -71,8 +82,14 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-slate-800">Escanear Factura</h2>
-              <p className="text-slate-500 mt-2">Sube una foto de tu factura de luz, agua, IBI o seguros y deja que nuestra IA haga el trabajo por ti.</p>
+              <p className="text-slate-500 mt-2">Sube una foto de tu factura y deja que nuestra IA trabaje.</p>
             </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium animate-fade">
+                {error}
+              </div>
+            )}
 
             <input 
               type="file" 
@@ -115,20 +132,27 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Leyendo factura con IA...
+                      Escaneando con IA...
                     </>
-                  ) : "Analizar Factura con Gemini"}
+                  ) : "Analizar con Gemini"}
                 </button>
+                {error && (
+                   <button 
+                    onClick={() => setScanResult({ provider: '', amount: 0, date: new Date().toISOString().split('T')[0], category: Category.OTHER })}
+                    className="w-full bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all"
+                  >
+                    Introducir datos manualmente
+                  </button>
+                )}
               </div>
             )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-6">Confirmar Detalles de la Factura</h2>
-            
+            <h2 className="text-xl font-bold text-slate-800 mb-6">Confirmar Detalles</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Activo Asociado</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Activo</label>
                 <select 
                   value={selectedAssetId}
                   onChange={(e) => setSelectedAssetId(e.target.value)}
@@ -166,7 +190,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha Emisión</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha</label>
                 <input 
                   type="date"
                   value={scanResult.date}
@@ -175,7 +199,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Próxima Renovación</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Renovación</label>
                 <input 
                   type="date"
                   value={scanResult.expiryDate || ''}
@@ -184,21 +208,9 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete }) => {
                 />
               </div>
             </div>
-
             <div className="flex gap-4 pt-6 border-t border-slate-100">
-              <button 
-                type="button"
-                onClick={() => setScanResult(null)}
-                className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors"
-              >
-                Volver
-              </button>
-              <button 
-                type="submit"
-                className="flex-[2] bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all"
-              >
-                Guardar Gasto
-              </button>
+              <button type="button" onClick={() => setScanResult(null)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors">Volver</button>
+              <button type="submit" className="flex-[2] bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all">Guardar</button>
             </div>
           </form>
         )}
