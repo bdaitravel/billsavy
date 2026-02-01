@@ -16,11 +16,11 @@ const App: React.FC = () => {
   
   const [assets] = useState<Asset[]>([
     { id: '1', name: 'Mi Hogar', type: AssetType.HOUSE, status: 'active' },
-    { id: '2', name: 'Mi Coche', type: AssetType.VEHICLE, status: 'active' }
+    { id: '2', name: 'Mis Vehículos', type: AssetType.VEHICLE, status: 'active' }
   ]);
   
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [activeTab, setActiveTab] = useState<'inicio' | 'ahorro' | 'derechos' | 'escanear'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'ahorro' | 'ayuda' | 'escanear'>('inicio');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   if (!user.isLoggedIn) return (
@@ -52,15 +52,15 @@ const App: React.FC = () => {
           </div>
           <div className="flex flex-col">
             <h1 className="text-[11px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY OS</h1>
-            <p className="text-[7px] font-bold text-teal-400 uppercase tracking-tighter mt-1.5">Arbitraje de Consumo IA</p>
+            <p className="text-[7px] font-bold text-teal-400 uppercase tracking-tighter mt-1.5">Smart Manager</p>
           </div>
         </div>
       </header>
       
       {/* Contenido Principal con Padding Inferior dinámico */}
       <main className="flex-1 overflow-hidden relative">
-        <div className="h-full overflow-y-auto px-5 pt-4 pb-[calc(110px+env(safe-area-inset-bottom))]">
-          {activeTab === 'inicio' && <Dashboard expenses={expenses} assets={assets} onAction={() => setActiveTab('escanear')} />}
+        <div className="h-full overflow-y-auto px-5 pt-4 pb-[calc(130px+env(safe-area-inset-bottom))] scrollbar-hide">
+          {activeTab === 'inicio' && <Dashboard expenses={expenses} assets={assets} user={user} onAction={() => setActiveTab('escanear')} />}
           {activeTab === 'escanear' && (
             <div className="h-full flex items-center justify-center py-6">
               <BillUploader 
@@ -70,8 +70,8 @@ const App: React.FC = () => {
               />
             </div>
           )}
-          {activeTab === 'ahorro' && <Recommendations recommendations={[]} isLoading={false} onRefresh={() => {}} />}
-          {activeTab === 'derechos' && <ConsumerRights />}
+          {activeTab === 'ahorro' && <Recommendations recommendations={[]} isLoading={false} onRefresh={() => {}} userCity={user.city} />}
+          {activeTab === 'ayuda' && <ConsumerRights />}
         </div>
       </main>
 
@@ -80,11 +80,11 @@ const App: React.FC = () => {
         <BillyChat expenses={expenses} assets={assets} />
       </div>
 
-      {/* Navigation Footer con Safe Area Bottom */}
-      <footer className="bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/10 px-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-2 flex justify-around items-center z-[250] shadow-[0_-15px_50px_rgba(0,0,0,0.7)]">
+      {/* Navigation Footer con Safe Area Bottom para iPhone */}
+      <footer className="bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/10 px-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-2 flex justify-around items-center z-[250] shadow-[0_-15px_50px_rgba(0,0,0,0.8)]">
         <NavButton id="inicio" icon="⚡" label="Inicio" />
-        <NavButton id="ahorro" icon="💰" label="Ahorro" />
-        <NavButton id="derechos" icon="🛡️" label="Ayuda" />
+        <NavButton id="ahorro" icon="📉" label="Ahorro" />
+        <NavButton id="ayuda" icon="🛡️" label="Billy SOS" />
       </footer>
 
       {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}

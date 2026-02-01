@@ -12,96 +12,115 @@ interface BillUploaderProps {
 const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete, onCancel }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [auditResult, setAuditResult] = useState<any>(null);
+  const [result, setResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processFile = async (selectedFile: File) => {
+    setIsScanning(true);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const res = reader.result as string;
+          resolve(res.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+
+      const base64Data = await base64Promise;
+      const data = await analyzeBillImage(base64Data, selectedFile.type);
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+      alert("Billy no pudo leer el documento. Intenta con una foto más nítida.");
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      processFile(selectedFile);
     }
   };
 
-  const handleScan = async () => {
-    if (!file) return;
-    setIsScanning(true);
-    
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const resultBase64 = reader.result as string;
-        const base64Data = resultBase64.split(',')[1];
-        const result = await analyzeBillImage(base64Data, file.type);
-        setAuditResult(result);
-      } catch (err) {
-        console.error("Error analizando:", err);
-        alert("Billy no pudo procesar este documento. Inténtalo con otra foto más clara.");
-      } finally {
-        setIsScanning(false);
-      }
-    };
-    reader.onerror = () => {
-      alert("Error al leer el archivo.");
-      setIsScanning(false);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const confirmAndSave = () => {
-    if (!auditResult) return;
+  const saveExpense = () => {
+    if (!result) return;
     onComplete({
       id: Math.random().toString(36).substr(2, 9),
-      provider: auditResult.provider,
-      amount: auditResult.amount,
-      date: auditResult.date,
-      category: auditResult.category as Category,
+      provider: result.provider,
+      amount: result.amount,
+      date: result.date,
+      category: result.category as Category,
       assetId: assets[0]?.id || '1',
-      description: auditResult.summary || '',
+      description: `Renovación: ${result.renewalDate}`,
       isRecurring: true,
       source: 'manual',
-      auditStatus: auditResult.auditStatus as AuditStatus,
-      auditDetail: auditResult.auditDetail
+      auditStatus: result.status.includes('AVISO') ? 'ABUSIVO' : (result.status === 'OPTIMIZADO' ? 'OPTIMIZADO' : 'JUSTO'),
+      auditDetail: result.billyTip
     });
   };
 
-  if (auditResult) {
-    const isAbusive = auditResult.auditStatus === 'ABUSIVO';
+  if (isScanning) {
     return (
-      <div className="bg-slate-900 border border-white/10 p-8 rounded-[3rem] w-full max-w-md animate-pop shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div className="bg-slate-900 border border-teal-500/20 p-10 rounded-[3rem] w-full max-w-md text-center animate-pop flex flex-col items-center justify-center min-h-[400px] shadow-2xl">
+        <div className="w-20 h-20 mb-8 relative">
+          <div className="absolute inset-0 border-4 border-teal-500/10 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-t-teal-400 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center text-3xl">🤖</div>
+        </div>
+        <h3 className="text-xl font-black text-white uppercase tracking-tighter">Billy está analizando...</h3>
+        <p className="text-[10px] text-teal-400 font-bold uppercase tracking-widest mt-2 animate-pulse">Organizando tus recordatorios</p>
+      </div>
+    );
+  }
+
+  if (result) {
+    const isAlert = result.status.includes('AVISO');
+    return (
+      <div className="bg-slate-900 border border-white/10 p-8 rounded-[3rem] w-full max-w-md animate-pop shadow-2xl max-h-[80vh] overflow-y-auto scrollbar-hide">
         <div className="text-center mb-6">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-2xl ${isAbusive ? 'bg-red-500/20 text-red-500 shadow-red-500/20' : 'bg-teal-500/20 text-teal-500 shadow-teal-500/20'}`}>
-            {isAbusive ? '⚖️' : '🛡️'}
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-xl ${isAlert ? 'bg-orange-500/20 text-orange-500' : 'bg-teal-500/20 text-teal-500'}`}>
+            {isAlert ? '⚠️' : '✅'}
           </div>
-          <h2 className={`text-xl font-black uppercase tracking-tighter ${isAbusive ? 'text-red-500' : 'text-teal-400'}`}>
-            DICTAMEN: {auditResult.auditStatus}
+          <h2 className={`text-lg font-black uppercase tracking-tighter ${isAlert ? 'text-orange-400' : 'text-teal-400'}`}>
+            {result.status}
           </h2>
         </div>
 
         <div className="space-y-4 mb-8">
           <div className="bg-white/5 p-5 rounded-3xl border border-white/5">
-            <div className="flex justify-between items-center mb-2">
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{auditResult.category}</span>
-               <span className="text-xl font-black text-white">{auditResult.amount}€</span>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{result.category}</span>
+              <span className="text-xl font-black text-white">{result.amount}€</span>
             </div>
-            <p className="text-[11px] font-bold text-white uppercase truncate">{auditResult.provider}</p>
-            <p className="text-[8px] text-slate-500 font-bold uppercase mt-1">{auditResult.date}</p>
+            <p className="text-[11px] font-bold text-white uppercase truncate mb-3">{result.provider}</p>
+            <div className="flex items-center gap-2 bg-slate-800/80 p-3 rounded-2xl border border-white/5">
+              <span className="text-lg">📅</span>
+              <div>
+                <p className="text-[8px] font-black text-slate-500 uppercase">Próxima Renovación</p>
+                <p className="text-[10px] font-bold text-teal-400 uppercase">{result.renewalDate}</p>
+              </div>
+            </div>
           </div>
 
           <div className="bg-slate-800/50 p-6 rounded-3xl border border-white/5">
-            <span className="text-[8px] font-black text-teal-400 uppercase block mb-2 tracking-widest">Análisis del Abogado IA:</span>
-            <p className="text-[11px] text-slate-300 leading-relaxed mb-4">"{auditResult.auditDetail}"</p>
+            <span className="text-[8px] font-black text-teal-400 uppercase block mb-2 tracking-widest">Consejo de Billy:</span>
+            <p className="text-[11px] text-slate-300 leading-relaxed mb-4 italic">"{result.billyTip}"</p>
             <div className="h-px bg-white/5 w-full my-4"></div>
-            <span className="text-[8px] font-black text-orange-400 uppercase block mb-2 tracking-widest">Plan de Acción:</span>
-            <p className="text-[11px] text-white font-bold italic leading-relaxed">"💡 {auditResult.actionPlan}"</p>
+            <p className="text-[10px] text-white font-bold uppercase tracking-widest">💡 {result.action}</p>
           </div>
         </div>
 
         <div className="space-y-3">
-          <button onClick={confirmAndSave} className="w-full py-5 bg-teal-500 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-            Validar y Guardar
+          <button onClick={saveExpense} className="w-full py-5 bg-teal-500 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+            Guardar Recordatorio
           </button>
-          <button onClick={() => { setAuditResult(null); setFile(null); }} className="w-full py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-            Descartar Auditoría
+          <button onClick={() => { setResult(null); setFile(null); }} className="w-full py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+            Cancelar
           </button>
         </div>
       </div>
@@ -114,10 +133,10 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete, onCance
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
       </button>
 
-      <div className="w-16 h-16 bg-teal-500/10 text-teal-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(45,212,191,0.2)]">📸</div>
-      <h3 className="text-xl font-black mb-2 uppercase tracking-tighter text-white">Auditoría Billy IA</h3>
+      <div className="w-16 h-16 bg-teal-500/10 text-teal-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">📄</div>
+      <h3 className="text-xl font-black mb-2 uppercase tracking-tighter text-white">Gestor de Gastos</h3>
       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-8 leading-relaxed px-4">
-        Analizamos tus contratos buscando cláusulas abusivas y precios fuera de mercado.
+        Sube tus contratos de Hogar, Coche o Moto. Billy se encarga de que no pagues de más.
       </p>
       
       <input 
@@ -128,28 +147,12 @@ const BillUploader: React.FC<BillUploaderProps> = ({ assets, onComplete, onCance
         className="hidden" 
       />
       
-      {!file ? (
-        <button 
-          onClick={() => fileInputRef.current?.click()} 
-          className="w-full py-16 border-2 border-dashed border-white/10 rounded-[2.5rem] text-[10px] font-black uppercase text-slate-500 bg-white/5 active:scale-95 transition-all hover:border-teal-500/30 hover:bg-teal-500/5"
-        >
-          Toca para sacar foto <br/> o subir documento
-        </button>
-      ) : (
-        <div className="space-y-4">
-          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-between">
-            <span className="text-[10px] text-teal-400 font-bold uppercase truncate max-w-[200px]">{file.name}</span>
-            <button onClick={() => setFile(null)} className="text-red-500 font-black text-xs">ELIMINAR</button>
-          </div>
-          <button 
-            onClick={handleScan} 
-            disabled={isScanning} 
-            className="w-full py-5 bg-teal-500 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 disabled:opacity-50"
-          >
-            {isScanning ? 'Billy analizando leyes...' : 'Iniciar Auditoría Senior'}
-          </button>
-        </div>
-      )}
+      <button 
+        onClick={() => fileInputRef.current?.click()} 
+        className="w-full py-16 border-2 border-dashed border-white/10 rounded-[2.5rem] text-[10px] font-black uppercase text-slate-500 bg-white/5 active:scale-95 transition-all hover:border-teal-500/40"
+      >
+        Haz una foto o sube un PDF
+      </button>
     </div>
   );
 };

@@ -1,38 +1,33 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { AIRecommendation } from '../types';
 
 interface RecommendationsProps {
   recommendations: AIRecommendation[];
   onRefresh: () => void;
   isLoading: boolean;
+  userCity?: string;
 }
 
-const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onRefresh, isLoading }) => {
-  const facts = [
-    { country: "🇩🇪 Alemania", fact: "Las familias revisan seguros cada 6 meses, ahorrando hasta 450€ anuales." },
-    { country: "🇯🇵 Japón", fact: "El uso de enchufes inteligentes reduce el consumo vampiro en un 12%." },
-    { country: "🇳🇴 Noruega", fact: "La digitalización total de facturas permite detectar un 8% de errores de facturación." }
-  ];
-
+const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onRefresh, isLoading, userCity }) => {
   return (
-    <div className="h-full flex flex-col gap-5 overflow-hidden animate-fade py-1">
+    <div className="h-full flex flex-col gap-6 animate-fade py-1">
       
-      {/* Financial Wisdom (Sabías que...) */}
-      <div className="bg-teal-950/20 border border-teal-900/30 p-4 rounded-3xl flex items-center gap-4">
-        <div className="w-10 h-10 bg-teal-500/10 rounded-2xl flex items-center justify-center text-xl shadow-inner">💡</div>
-        <div className="flex-1">
-          <span className="text-[8px] font-black text-teal-400 uppercase tracking-widest">Sabiduría Global: {facts[0].country}</span>
-          <p className="text-[10px] text-slate-300 font-medium leading-tight mt-1">{facts[0].fact}</p>
+      {/* City Context Card */}
+      <div className="bg-teal-900/10 border border-teal-500/20 p-6 rounded-[2.5rem] relative overflow-hidden">
+        <div className="relative z-10">
+          <span className="text-[9px] font-black text-teal-400 uppercase tracking-widest block mb-2">Monitor {userCity || 'España'}</span>
+          <p className="text-sm font-bold text-white leading-tight">En {userCity || 'tu ciudad'} los usuarios ahorran un 22% al auditar sus seguros de coche.</p>
         </div>
+        <div className="absolute top-0 right-0 p-4 opacity-20 text-4xl">🏙️</div>
       </div>
 
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-black text-white uppercase tracking-tighter">Plan de Ahorro IA</h2>
-        <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.2em]">Billy ha escaneado 42 comercializadoras por ti</p>
+        <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.2em]">Billy ha analizado 120 tarifas este minuto</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+      <div className="flex-1 overflow-y-auto pr-1 space-y-4 scrollbar-hide">
         {isLoading ? (
           <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-60">
             <div className="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
@@ -49,16 +44,16 @@ const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onRe
                 </div>
               </div>
               <p className="text-[10px] text-slate-300 font-medium leading-relaxed mb-5">"{rec.reasoning}"</p>
-              <button className="w-full py-3.5 bg-teal-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-teal-500 shadow-xl transition-all active:scale-95">
+              <button className="w-full py-4 bg-teal-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">
                 {rec.action}
               </button>
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 bg-white/2 rounded-[2rem] border border-dashed border-white/5">
-            <div className="text-4xl mb-4 grayscale opacity-40">📸</div>
-            <p className="text-[9px] font-black text-slate-500 uppercase text-center px-12 leading-loose">
-              Sube una factura o contrato en la pantalla de inicio para que Billy pueda auditar tus gastos.
+          <div className="flex flex-col items-center justify-center py-12 bg-white/2 rounded-[2.5rem] border border-dashed border-white/10 px-10">
+            <div className="text-4xl mb-4 grayscale opacity-40">📥</div>
+            <p className="text-[10px] font-black text-slate-500 uppercase text-center leading-loose">
+              Sin datos suficientes. Sube facturas en la pestaña de Inicio para generar recomendaciones personalizadas para {userCity || 'tu zona'}.
             </p>
           </div>
         )}
@@ -66,10 +61,9 @@ const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onRe
 
       <button 
         onClick={onRefresh}
-        disabled={isLoading}
-        className="w-full py-4 bg-white/5 text-teal-400 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border border-white/10 hover:bg-white/10 transition-all"
+        className="w-full py-5 bg-white/5 text-teal-400 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border border-white/10 active:scale-95 transition-all"
       >
-        Actualizar Comparativa
+        Recalcular Ahorro
       </button>
     </div>
   );
