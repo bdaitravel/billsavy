@@ -3,10 +3,10 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const createAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const analyzeBillImage = async (base64Image: string, mimeType: string) => {
+export const analyzeBillImage = async (base64Data: string, mimeType: string) => {
   const ai = createAIInstance();
   
-  // Normalización estricta de MimeType para Gemini
+  // Forzamos el tipo de contenido para asegurar compatibilidad con Gemini
   const finalMimeType = mimeType.includes('pdf') ? 'application/pdf' : 'image/jpeg';
   
   const response = await ai.models.generateContent({
@@ -16,14 +16,21 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string) =>
         {
           inlineData: {
             mimeType: finalMimeType,
-            data: base64Image,
+            data: base64Data,
           },
         },
         {
-          text: `Analiza esta factura o contrato de España. 
-          BUSCA LOS DATOS REALES: Importe total, Fecha de factura y Fecha de Vencimiento/Renovación.
-          Si es un seguro de coche, moto o hogar, calcula la renovación sumando 1 año a la fecha de efecto.
-          Si es una factura de luz (Iberdrola, Endesa, etc), identifica el importe exacto.
+          text: `Eres Billy, el asistente experto en ahorro para hogares y vehículos en España.
+          Analiza este documento (PDF o imagen). Es una factura real o un contrato.
+          No digas que no puedes leerlo; extrae toda la información posible buscando palabras clave.
+
+          DATOS OBLIGATORIOS A EXTRAER:
+          1. Empresa: Nombre del proveedor (ej. Iberdrola, Endesa, Mapfre, Pepephone).
+          2. Importe: El total de la factura (solo el número).
+          3. Fecha: Fecha de emisión (DD/MM/AAAA).
+          4. Categoría: Luz, Agua, Gas, Coche, Moto, Seguro, Teléfono, Suscripción.
+          5. Renovación: Si es seguro, fecha + 1 año. Si es suministro, fecha + 1 mes.
+          6. Rating: 'PRECIO TOP' (buen precio), 'PRECIO NORMAL', 'AVISO BILLY' (caro).
 
           Responde EXCLUSIVAMENTE este JSON:
           {
@@ -31,7 +38,7 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string) =>
             "amount": 0.0,
             "date": "DD/MM/AAAA",
             "renewalDate": "DD/MM/AAAA",
-            "category": "Luz | Agua | Gas | Coche | Moto | Seguro | Teléfono | Suscripción",
+            "category": "categoría",
             "priceRating": "PRECIO TOP | PRECIO NORMAL | AVISO BILLY",
             "billyAdvice": "un truco de ahorro corto",
             "action": "acción recomendada"
