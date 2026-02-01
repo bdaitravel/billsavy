@@ -3,9 +3,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const createAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const analyzeBillImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
+export const analyzeBillImage = async (base64Image: string, mimeType: string) => {
   const ai = createAIInstance();
-  const finalMimeType = mimeType.includes('pdf') ? 'application/pdf' : 'image/jpeg';
+  
+  // Forzamos mimeType compatibles con Gemini para evitar errores de red
+  const supportedMimeType = mimeType === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -13,33 +15,32 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string = '
       parts: [
         {
           inlineData: {
-            mimeType: finalMimeType,
+            mimeType: supportedMimeType,
             data: base64Image,
           },
         },
         {
-          text: `Eres Billy, el asistente inteligente para el ahorro en casa y vehículos en España.
-          Tu trabajo es leer este documento y decirme cuándo hay que renovarlo y si el precio es bueno.
+          text: `Analiza este documento (PDF o imagen). Es una factura o contrato de hogar/vehículo en España.
+          TU MISIÓN ES EXTRAER DATOS EXACTOS. No digas que no puedes leerlo, haz tu mejor esfuerzo buscando textos clave como 'Importe', 'Fecha', 'Vencimiento' o 'CUPS'.
           
-          OBJETIVOS:
-          1. Extraer: Empresa, Importe y Fecha.
-          2. Categoría: Hogar (Luz, Agua, Gas, Comunidad), Vehículo (Coche, Moto, Seguro), Otros (Suscripciones, Teléfono).
-          3. PRÓXIMA CITA: Si es un seguro, calcula 1 año desde la fecha para el recordatorio de renovación.
-          4. ¿PAGO MUCHO?: Compara con los precios actuales en España.
-             - "PRECIO TOP": Si es muy barato.
-             - "PRECIO NORMAL": Si está en la media.
-             - "AVISO BILLY": Si crees que el usuario puede ahorrar >15€/mes cambiándose.
+          DATOS A EXTRAER:
+          1. Empresa: (ej. Iberdrola, Mapfre, Pepephone...)
+          2. Importe total: (solo el número)
+          3. Fecha de factura: (DD/MM/AAAA)
+          4. Categoría: Luz, Agua, Gas, Coche, Moto, Seguro, Teléfono, Comunidad, Suscripción.
+          5. VENCIMIENTO: Calcula la fecha de renovación (si es seguro suele ser +1 año desde la fecha).
+          6. VALORACIÓN PRECIO: Compara con la media en España.
           
-          Responde SOLO este JSON:
+          Responde ESTRICTAMENTE con este JSON:
           {
-            "provider": "nombre empresa",
+            "provider": "nombre",
             "amount": 0.0,
             "date": "DD/MM/AAAA",
             "renewalDate": "DD/MM/AAAA",
             "category": "categoría",
             "priceRating": "PRECIO TOP | PRECIO NORMAL | AVISO BILLY",
-            "billyAdvice": "un consejo corto sobre este gasto",
-            "action": "qué hacer para ahorrar o recordar"
+            "billyAdvice": "un truco de ahorro corto",
+            "action": "acción inmediata"
           }`,
         },
       ],
