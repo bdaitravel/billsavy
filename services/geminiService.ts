@@ -18,28 +18,28 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string = '
           },
         },
         {
-          text: `Eres Billy, el asistente personal inteligente para la gestión de gastos de hogar, coche y moto en España.
-          Tu objetivo es extraer información clave para que el usuario no se olvide de sus renovaciones y sepa si está pagando de más.
+          text: `Eres Billy, el asistente inteligente para el ahorro en casa y vehículos en España.
+          Tu trabajo es leer este documento y decirme cuándo hay que renovarlo y si el precio es bueno.
           
-          TAREAS:
-          1. Identifica: Proveedor, Importe, Fecha del documento.
-          2. Determina Categoría: (Hogar, Coche, Moto, Luz, Agua, Gas, Telefonía, Comunidad, Seguros, Suscripciones).
-          3. Calcula/Estima la PRÓXIMA RENOVACIÓN: Si es un seguro o contrato anual, suma 1 año a la fecha.
-          4. ANÁLISIS DE PRECIO: Compara con los precios medios en España. 
-             - Si el precio es bueno: "OPTIMIZADO"
-             - Si es normal: "JUSTO"
-             - Si detectas algo raro o muy caro (>20% media): "AVISO BILLY" (indica por qué).
+          OBJETIVOS:
+          1. Extraer: Empresa, Importe y Fecha.
+          2. Categoría: Hogar (Luz, Agua, Gas, Comunidad), Vehículo (Coche, Moto, Seguro), Otros (Suscripciones, Teléfono).
+          3. PRÓXIMA CITA: Si es un seguro, calcula 1 año desde la fecha para el recordatorio de renovación.
+          4. ¿PAGO MUCHO?: Compara con los precios actuales en España.
+             - "PRECIO TOP": Si es muy barato.
+             - "PRECIO NORMAL": Si está en la media.
+             - "AVISO BILLY": Si crees que el usuario puede ahorrar >15€/mes cambiándose.
           
-          Responde EXCLUSIVAMENTE en JSON:
+          Responde SOLO este JSON:
           {
-            "provider": "nombre",
+            "provider": "nombre empresa",
             "amount": 0.0,
             "date": "DD/MM/AAAA",
             "renewalDate": "DD/MM/AAAA",
             "category": "categoría",
-            "status": "OPTIMIZADO | JUSTO | AVISO BILLY",
-            "billyTip": "consejo breve sobre el precio o renovación",
-            "action": "acción recomendada"
+            "priceRating": "PRECIO TOP | PRECIO NORMAL | AVISO BILLY",
+            "billyAdvice": "un consejo corto sobre este gasto",
+            "action": "qué hacer para ahorrar o recordar"
           }`,
         },
       ],
@@ -54,11 +54,11 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string = '
           date: { type: Type.STRING },
           renewalDate: { type: Type.STRING },
           category: { type: Type.STRING },
-          status: { type: Type.STRING },
-          billyTip: { type: Type.STRING },
+          priceRating: { type: Type.STRING },
+          billyAdvice: { type: Type.STRING },
           action: { type: Type.STRING }
         },
-        required: ["provider", "amount", "date", "renewalDate", "category", "status", "billyTip", "action"]
+        required: ["provider", "amount", "date", "renewalDate", "category", "priceRating", "billyAdvice", "action"]
       }
     }
   });
