@@ -6,8 +6,8 @@ const createAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const analyzeBillImage = async (base64Image: string, mimeType: string) => {
   const ai = createAIInstance();
   
-  // Forzamos mimeType compatibles con Gemini para evitar errores de red
-  const supportedMimeType = mimeType === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
+  // Normalización estricta de MimeType para Gemini
+  const finalMimeType = mimeType.includes('pdf') ? 'application/pdf' : 'image/jpeg';
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -15,32 +15,26 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string) =>
       parts: [
         {
           inlineData: {
-            mimeType: supportedMimeType,
+            mimeType: finalMimeType,
             data: base64Image,
           },
         },
         {
-          text: `Analiza este documento (PDF o imagen). Es una factura o contrato de hogar/vehículo en España.
-          TU MISIÓN ES EXTRAER DATOS EXACTOS. No digas que no puedes leerlo, haz tu mejor esfuerzo buscando textos clave como 'Importe', 'Fecha', 'Vencimiento' o 'CUPS'.
-          
-          DATOS A EXTRAER:
-          1. Empresa: (ej. Iberdrola, Mapfre, Pepephone...)
-          2. Importe total: (solo el número)
-          3. Fecha de factura: (DD/MM/AAAA)
-          4. Categoría: Luz, Agua, Gas, Coche, Moto, Seguro, Teléfono, Comunidad, Suscripción.
-          5. VENCIMIENTO: Calcula la fecha de renovación (si es seguro suele ser +1 año desde la fecha).
-          6. VALORACIÓN PRECIO: Compara con la media en España.
-          
-          Responde ESTRICTAMENTE con este JSON:
+          text: `Analiza esta factura o contrato de España. 
+          BUSCA LOS DATOS REALES: Importe total, Fecha de factura y Fecha de Vencimiento/Renovación.
+          Si es un seguro de coche, moto o hogar, calcula la renovación sumando 1 año a la fecha de efecto.
+          Si es una factura de luz (Iberdrola, Endesa, etc), identifica el importe exacto.
+
+          Responde EXCLUSIVAMENTE este JSON:
           {
-            "provider": "nombre",
+            "provider": "nombre empresa",
             "amount": 0.0,
             "date": "DD/MM/AAAA",
             "renewalDate": "DD/MM/AAAA",
-            "category": "categoría",
+            "category": "Luz | Agua | Gas | Coche | Moto | Seguro | Teléfono | Suscripción",
             "priceRating": "PRECIO TOP | PRECIO NORMAL | AVISO BILLY",
             "billyAdvice": "un truco de ahorro corto",
-            "action": "acción inmediata"
+            "action": "acción recomendada"
           }`,
         },
       ],
