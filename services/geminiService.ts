@@ -6,7 +6,6 @@ const createAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const analyzeBillImage = async (base64Data: string, mimeType: string) => {
   const ai = createAIInstance();
   
-  // Forzamos el tipo de contenido para asegurar compatibilidad con Gemini
   const finalMimeType = mimeType.includes('pdf') ? 'application/pdf' : 'image/jpeg';
   
   const response = await ai.models.generateContent({
@@ -20,27 +19,25 @@ export const analyzeBillImage = async (base64Data: string, mimeType: string) => 
           },
         },
         {
-          text: `Eres Billy, el asistente experto en ahorro para hogares y vehículos en España.
-          Analiza este documento (PDF o imagen). Es una factura real o un contrato.
-          No digas que no puedes leerlo; extrae toda la información posible buscando palabras clave.
-
-          DATOS OBLIGATORIOS A EXTRAER:
-          1. Empresa: Nombre del proveedor (ej. Iberdrola, Endesa, Mapfre, Pepephone).
-          2. Importe: El total de la factura (solo el número).
-          3. Fecha: Fecha de emisión (DD/MM/AAAA).
-          4. Categoría: Luz, Agua, Gas, Coche, Moto, Seguro, Teléfono, Suscripción.
-          5. Renovación: Si es seguro, fecha + 1 año. Si es suministro, fecha + 1 mes.
-          6. Rating: 'PRECIO TOP' (buen precio), 'PRECIO NORMAL', 'AVISO BILLY' (caro).
+          text: `Eres Billy, el asistente experto en auditoría de gastos. 
+          Analiza este documento (factura, seguro o contrato). 
+          Busca específicamente:
+          1. Proveedor (ej. Iberdrola, Mapfre).
+          2. Importe total.
+          3. Fecha de emisión.
+          4. FECHA DE VENCIMIENTO O RENOVACIÓN (Si no aparece, calcula +1 año para seguros o +1 mes para luz).
+          5. Categoría.
+          6. ¿Es un precio justo o abusivo comparado con el mercado español actual?
 
           Responde EXCLUSIVAMENTE este JSON:
           {
-            "provider": "nombre empresa",
+            "provider": "nombre",
             "amount": 0.0,
             "date": "DD/MM/AAAA",
             "renewalDate": "DD/MM/AAAA",
-            "category": "categoría",
+            "category": "Luz|Agua|Gas|Seguro|Coche|Moto|Teléfono|Suscripción",
             "priceRating": "PRECIO TOP | PRECIO NORMAL | AVISO BILLY",
-            "billyAdvice": "un truco de ahorro corto",
+            "billyAdvice": "truco corto de ahorro",
             "action": "acción recomendada"
           }`,
         },
