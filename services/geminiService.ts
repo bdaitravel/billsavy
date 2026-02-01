@@ -15,6 +15,7 @@ const handleAIRequest = async (requestFn: () => Promise<any>) => {
 export const analyzeBillImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
   return handleAIRequest(async () => {
     const ai = createAIInstance();
+    // Normalizamos el mimeType para evitar errores 400 en modelos que no soportan ciertos tipos
     const finalMimeType = mimeType.includes('pdf') ? 'application/pdf' : 'image/jpeg';
     
     const response = await ai.models.generateContent({
@@ -28,22 +29,31 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string = '
             },
           },
           {
-            text: `Eres el Auditor Senior de Consumo y Abogado Financiero de BillSavy. 
-            Tu misión es auditar este documento (Factura, Póliza de Seguro o Extracto Hipotecario).
+            text: `Actúa como un Abogado Experto en Derecho del Consumo y Perito Judicial Financiero en España.
+            Analiza el documento adjunto (puede ser una factura de luz, contrato de seguro, extracto de hipoteca o recibo de comunidad).
             
-            GUÍA DE AUDITORÍA:
-            1. HIPOTECAS: Busca intereses > Euribor+2%, gastos de notaría/registro cargados al cliente, o seguros vinculados ilegales.
-            2. SEGUROS (Coche/Hogar): Evalúa si la prima ha subido injustificadamente o si el precio es >30% superior a la media de mercado actual.
-            3. ENERGÍA: Busca precios kWh > 0.15€ en valle o cargos por servicios de mantenimiento ocultos.
-            
-            RESULTADO REQUERIDO:
-            - Identifica al Proveedor, Importe y Fecha.
-            - Categoría exacta (Hipotecas, Seguros, Luz, etc.).
-            - Veredicto: ABUSIVO (ilegal o fuera de mercado), JUSTO (precio normal), OPTIMIZADO (excelente precio).
-            - Explicación Técnica: Detalles de por qué es abusivo citando conceptos legales o de mercado.
-            - Plan de Acción: Pasos exactos para ahorrar.
+            TU MISIÓN:
+            1. Identifica al Proveedor, Importe Total y Fecha.
+            2. Determina la Categoría (Luz, Agua, Gas, Seguros, Hipoteca, Telefonía, Comunidad, Suscripciones, Impuestos).
+            3. AUDITORÍA LEGAL:
+               - Si es HIPOTECA: Busca intereses superiores al Euribor+2% o cláusulas de gastos abusivas.
+               - Si es SEGURO: Evalúa si la prima ha subido >10% sin previo aviso o si es cara para el mercado actual.
+               - Si es SUMINISTRO (Luz/Gas): Busca precios kWh > 0.16€ o servicios de mantenimiento inútiles.
+            4. VEREDICTO: Clasifica como 'ABUSIVO', 'JUSTO' u 'OPTIMIZADO'.
+            5. DETALLE TÉCNICO: Explica con base legal o de mercado por qué das ese veredicto.
+            6. PLAN DE ACCIÓN: Pasos concretos para reclamar o ahorrar dinero inmediatamente.
 
-            Responde ÚNICAMENTE en JSON puro.`,
+            Devuelve el resultado en este esquema JSON:
+            {
+              "provider": "nombre empresa",
+              "amount": 0.0,
+              "date": "DD/MM/AAAA",
+              "category": "categoría",
+              "auditStatus": "ABUSIVO | JUSTO | OPTIMIZADO",
+              "auditDetail": "explicación detallada",
+              "actionPlan": "pasos a seguir",
+              "summary": "resumen breve"
+            }`,
           },
         ],
       },
@@ -56,7 +66,7 @@ export const analyzeBillImage = async (base64Image: string, mimeType: string = '
             amount: { type: Type.NUMBER },
             date: { type: Type.STRING },
             category: { type: Type.STRING },
-            auditStatus: { type: Type.STRING, description: "MUST BE: ABUSIVO, OPTIMIZADO, JUSTO" },
+            auditStatus: { type: Type.STRING },
             auditDetail: { type: Type.STRING },
             actionPlan: { type: Type.STRING },
             summary: { type: Type.STRING }
