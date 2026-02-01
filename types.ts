@@ -31,6 +31,8 @@ export interface Asset {
   status: 'active' | 'empty' | 'optimizing';
 }
 
+export type AuditStatus = 'ABUSIVO' | 'OPTIMIZADO' | 'JUSTO';
+
 export interface Expense {
   id: string;
   assetId: string;
@@ -41,6 +43,8 @@ export interface Expense {
   description: string;
   isRecurring: boolean;
   source: 'manual' | 'bank' | 'email';
+  auditStatus?: AuditStatus;
+  auditDetail?: string;
 }
 
 export interface UserProfile {

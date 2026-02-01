@@ -33,19 +33,19 @@ const App: React.FC = () => {
   const NavButton = ({ id, icon, label }: { id: any, icon: string, label: string }) => (
     <button 
       onClick={() => setActiveTab(id)}
-      className={`flex flex-col items-center justify-center flex-1 py-2 transition-all ${activeTab === id ? 'text-teal-400' : 'text-slate-500'}`}
+      className={`flex flex-col items-center justify-center flex-1 py-3 transition-all outline-none ${activeTab === id ? 'text-teal-400' : 'text-slate-500'}`}
     >
-      <span className="text-xl mb-1">{icon}</span>
-      <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
-      {activeTab === id && <div className="w-1 h-1 bg-teal-400 rounded-full mt-1"></div>}
+      <span className="text-2xl mb-1">{icon}</span>
+      <span className="text-[9px] font-black uppercase tracking-widest leading-none">{label}</span>
+      {activeTab === id && <div className="w-1.5 h-1.5 bg-teal-400 rounded-full mt-2 shadow-[0_0_8px_rgba(45,212,191,0.5)]"></div>}
     </button>
   );
 
   return (
     <div className="h-screen w-full bg-[#020617] text-white flex flex-col overflow-hidden font-['Plus_Jakarta_Sans']">
       
-      {/* Header Superior: Solo Logo y Botón Atrás */}
-      <header className="px-6 pb-4 pt-[calc(0.5rem+env(safe-area-inset-top))] flex items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-50">
+      {/* Header Superior con padding de seguridad para iPhone */}
+      <header className="px-6 pb-4 pt-[calc(1.5rem+env(safe-area-inset-top))] flex items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-40">
         <div className="flex items-center gap-4 w-full">
           {activeTab === 'escanear' && (
             <button 
@@ -58,22 +58,22 @@ const App: React.FC = () => {
             </button>
           )}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-teal-400 font-black text-sm">B</span>
+            <div className="w-10 h-10 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-teal-400 font-black text-base">B</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-[10px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY</h1>
-              <p className="text-[7px] font-bold text-teal-400 uppercase tracking-tighter mt-1 opacity-80">
-                {activeTab === 'inicio' ? 'Dashboard Global' : activeTab === 'ahorro' ? 'Plan de Ahorro' : 'Defensa Legal'}
+              <h1 className="text-[11px] font-black uppercase tracking-widest text-white leading-none">BILLSAVY</h1>
+              <p className="text-[7px] font-bold text-teal-400 uppercase tracking-tighter mt-1.5 opacity-80">
+                {activeTab === 'inicio' ? 'Dashboard Global' : activeTab === 'ahorro' ? 'Optimización IA' : 'Asesor Legal'}
               </p>
             </div>
           </div>
         </div>
       </header>
       
-      {/* Main Content Area */}
+      {/* Contenido Principal */}
       <main className="flex-1 overflow-hidden relative">
-        <div className="h-full overflow-y-auto px-5 pt-4 pb-20">
+        <div className="h-full overflow-y-auto px-5 pt-4 pb-32">
           {activeTab === 'inicio' && <Dashboard expenses={expenses} assets={assets} onAction={() => setActiveTab('escanear')} />}
           {activeTab === 'escanear' && (
             <div className="h-full flex items-center justify-center py-10">
@@ -89,17 +89,17 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Billy Chat Flotante */}
-      <div className="fixed bottom-24 right-4 z-[60]">
+      {/* Billy Chat Botón */}
+      <div className="fixed bottom-32 right-6 z-[60]">
         <BillyChat expenses={expenses} assets={assets} />
       </div>
 
-      {/* Barra de Navegación Inferior (Standard iOS) */}
-      <footer className="bg-[#0f172a]/90 backdrop-blur-2xl border-t border-white/10 px-6 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 flex justify-around items-center z-50">
+      {/* Barra de Navegación Inferior Robusta para iPhone */}
+      <footer className="bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/10 px-8 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 flex justify-around items-center z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
         <NavButton id="inicio" icon="⚡" label="Inicio" />
         <NavButton id="ahorro" icon="💰" label="Ahorro" />
         <NavButton id="derechos" icon="🛡️" label="Ayuda" />
-      </footer custom-nav>
+      </footer>
 
       {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
     </div>
