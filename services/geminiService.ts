@@ -1,15 +1,26 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
+/**
+ * Función central para analizar documentos con Billy AI.
+ * Crea la instancia de la IA justo antes de la llamada para asegurar el uso de la clave más reciente.
+ */
 export const analyzeBillImage = async (base64Data: string, mimeType: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Comprobación de API Key antes de proceder
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API_KEY_MISSING");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
+  // Normalización de MimeType para el modelo
   let finalMimeType = mimeType;
-  if (mimeType.includes('pdf')) finalMimeType = 'application/pdf';
-  else if (mimeType.includes('image')) finalMimeType = mimeType;
+  if (mimeType.toLowerCase().includes('pdf')) finalMimeType = 'application/pdf';
+  else if (mimeType.toLowerCase().includes('png')) finalMimeType = 'image/png';
   else finalMimeType = 'image/jpeg';
 
-  console.log(`[Billy AI] Analizando: ${finalMimeType}`);
+  console.log(`[Billy AI] Procesando documento de tipo: ${finalMimeType}`);
 
   try {
     const response = await ai.models.generateContent({
@@ -23,16 +34,17 @@ export const analyzeBillImage = async (base64Data: string, mimeType: string) => 
             },
           },
           {
-            text: `Eres Billy, un experto en auditoría de facturas españolas. 
-            Tu misión es extraer datos de este documento (PDF o Imagen). 
-            Busca: Proveedor (empresa), Importe Total (con decimales), Fecha de factura, Categoría y Fecha de renovación.
+            text: `Eres Billy, el auditor experto en facturas. 
+            Extrae estos datos:
+            1. Proveedor (Nombre de la empresa).
+            2. Importe total (Número con decimales).
+            3. Fecha factura.
+            4. Categoría (Luz, Agua, Gas, Seguros, Coche, Moto, Suscripción, Otros).
+            5. Fecha renovación o vencimiento (Estimada si no figura).
             
-            Categorías: Luz, Agua, Gas, Seguros, Coche, Moto, Suscripción, Otros.
-            
-            Evalúa el precio: si es caro pon "AVISO BILLY", si es bueno "PRECIO TOP".
-            Escribe un consejo corto (billyAdvice) sobre cómo ahorrar en este gasto concreto.
-            
-            Responde exclusivamente en JSON.`,
+            Analiza si el precio es abusivo o bueno.
+            Escribe un consejo (billyAdvice) audaz y ahorrador.
+            Responde ÚNICAMENTE en JSON.`,
           },
         ],
       }],
@@ -46,22 +58,27 @@ export const analyzeBillImage = async (base64Data: string, mimeType: string) => 
             date: { type: Type.STRING },
             renewalDate: { type: Type.STRING },
             category: { type: Type.STRING },
-            priceRating: { type: Type.STRING },
-            billyAdvice: { type: Type.STRING },
-            action: { type: Type.STRING }
+            priceRating: { type: Type.STRING, description: "AVISO BILLY o PRECIO TOP" },
+            billyAdvice: { type: Type.STRING }
           },
           required: ["provider", "amount", "category"]
         }
       }
     });
 
-    if (!response || !response.text) throw new Error("No hay respuesta de la IA");
+    if (!response || !response.text) {
+      throw new Error("EMPTY_RESPONSE");
+    }
 
-    const cleanJson = response.text.trim();
-    console.log("[Billy AI] Resultado:", cleanJson);
-    return JSON.parse(cleanJson);
-  } catch (error) {
-    console.error("[Billy AI] Error:", error);
-    throw new Error("No he podido leer bien ese archivo. Prueba a subir uno más legible.");
+    return JSON.parse(response.text.trim());
+  } catch (error: any) {
+    console.error("[Billy AI] Error durante el análisis:", error);
+    
+    // Si es un error de entidad no encontrada (clave inválida o proyecto sin cuota)
+    if (error.message?.includes("entity was not found") || error.message?.includes("API key")) {
+      throw new Error("API_KEY_INVALID");
+    }
+    
+    throw error;
   }
 };

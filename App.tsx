@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Asset, AssetType, Expense, UserProfile } from './types';
 import Dashboard from './components/Dashboard';
 import BillUploader from './components/BillUploader';
@@ -23,6 +23,15 @@ const App: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeTab, setActiveTab] = useState<'inicio' | 'cartera' | 'ahorro' | 'ayuda' | 'escanear'>('inicio');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(!!process.env.API_KEY);
+
+  useEffect(() => {
+    // Polling ligero para detectar si se ha añadido una clave
+    const interval = setInterval(() => {
+      setHasApiKey(!!process.env.API_KEY);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!user.isLoggedIn) return (
     <Login onLogin={(n, e, b, c) => { 
@@ -33,6 +42,12 @@ const App: React.FC = () => {
 
   const addAsset = (asset: Asset) => {
     setAssets([...assets, asset]);
+  };
+
+  const handleOpenKey = async () => {
+    if (window.aistudio) {
+      await window.aistudio.openSelectKey();
+    }
   };
 
   const NavButton = ({ id, icon, label }: { id: any, icon: string, label: string }) => (
@@ -49,7 +64,7 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-full bg-[#020617] text-white flex flex-col overflow-hidden font-['Plus_Jakarta_Sans']">
       
-      <header className="px-6 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-[100]">
+      <header className="px-6 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center justify-between border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-[100]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center shadow-lg">
             <span className="text-teal-400 font-black text-base">B</span>
@@ -59,6 +74,15 @@ const App: React.FC = () => {
             <p className="text-[7px] font-bold text-teal-400 uppercase tracking-tighter mt-1.5">Asset Management Mode</p>
           </div>
         </div>
+
+        {!hasApiKey && (
+          <button 
+            onClick={handleOpenKey}
+            className="px-4 py-2 bg-teal-500/10 border border-teal-500/30 rounded-full text-[8px] font-black text-teal-400 uppercase tracking-widest animate-pulse"
+          >
+            Activar Billy AI ⚡
+          </button>
+        )}
       </header>
       
       <main className="flex-1 overflow-hidden relative">
