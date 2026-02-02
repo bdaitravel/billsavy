@@ -1,78 +1,68 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const createAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const analyzeBillImage = async (base64Data: string, mimeType: string) => {
-  const ai = createAIInstance();
+  // Inicialización directa con la API KEY del entorno
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  // Lista de tipos soportados por Gemini
-  const supportedTypes = [
-    'image/png', 
-    'image/jpeg', 
-    'image/webp', 
-    'image/heic', 
-    'image/heif', 
-    'application/pdf'
-  ];
+  // Normalización estricta de MimeType
+  let finalMimeType = mimeType;
+  if (mimeType.includes('pdf')) finalMimeType = 'application/pdf';
+  else if (mimeType.includes('image')) finalMimeType = mimeType;
+  else finalMimeType = 'image/jpeg';
 
-  // Si el tipo no está en la lista, intentamos tratarlo como imagen/jpeg por defecto
-  const finalMimeType = supportedTypes.includes(mimeType) ? mimeType : 'image/jpeg';
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: {
-      parts: [
-        {
-          inlineData: {
-            mimeType: finalMimeType,
-            data: base64Data,
-          },
-        },
-        {
-          text: `Eres Billy, el auditor experto en el mercado español. 
-          Analiza este documento (factura, póliza de seguro, contrato o recibo).
-          
-          OBJETIVOS:
-          1. Identifica al Proveedor (ej. Endesa, Linea Directa, Netflix).
-          2. Extrae el Importe total con IVA.
-          3. Encuentra la Fecha de emisión del cargo.
-          4. CRITICAL: Busca la FECHA DE FIN DE CONTRATO o RENOVACIÓN. Si es un seguro, suele ser anual. Si es luz, suele ser mensual. Indica la fecha exacta.
-          5. Categoría exacta entre: Luz, Agua, Gas, Seguros, Coche, Moto, Teléfono, Suscripción, Hipoteca.
-          6. Análisis de Mercado: ¿Es caro? ¿Hay una oferta mejor ahora mismo?
+  console.log(`[Billy AI] Iniciando análisis. Tipo: ${finalMimeType}, Tamaño base64: ${base64Data.length} chars`);
 
-          Responde EXCLUSIVAMENTE este JSON:
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{
+        parts: [
           {
-            "provider": "nombre",
-            "amount": 0.0,
-            "date": "DD/MM/AAAA",
-            "renewalDate": "DD/MM/AAAA",
-            "category": "Categoría",
-            "priceRating": "PRECIO TOP | PRECIO NORMAL | AVISO BILLY",
-            "billyAdvice": "Un consejo de 10 palabras sobre cómo ahorrar en esto",
-            "action": "acción recomendada"
-          }`,
-        },
-      ],
-    },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          provider: { type: Type.STRING },
-          amount: { type: Type.NUMBER },
-          date: { type: Type.STRING },
-          renewalDate: { type: Type.STRING },
-          category: { type: Type.STRING },
-          priceRating: { type: Type.STRING },
-          billyAdvice: { type: Type.STRING },
-          action: { type: Type.STRING }
-        },
-        required: ["provider", "amount", "date", "renewalDate", "category", "priceRating", "billyAdvice", "action"]
+            inlineData: {
+              mimeType: finalMimeType,
+              data: base64Data,
+            },
+          },
+          {
+            text: `AUDITORÍA DE GASTOS. Extrae los datos de este documento. 
+            Si no estás seguro de algún campo, inventa una estimación lógica basada en el contexto del documento.
+            Campos necesarios: proveedor, importe (amount), fecha (date), categoría (category), fecha de renovación (renewalDate).
+            
+            Formatos de categoría permitidos: Luz, Agua, Gas, Seguros, Coche, Moto, Suscripción, Otros.
+            
+            Responde ÚNICAMENTE un JSON válido.`,
+          },
+        ],
+      }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            provider: { type: Type.STRING },
+            amount: { type: Type.NUMBER },
+            date: { type: Type.STRING },
+            renewalDate: { type: Type.STRING },
+            category: { type: Type.STRING },
+            priceRating: { type: Type.STRING, description: "PRECIO TOP, PRECIO NORMAL o AVISO BILLY" },
+            billyAdvice: { type: Type.STRING },
+            action: { type: Type.STRING }
+          },
+          required: ["provider", "amount", "category"]
+        }
       }
+    });
+
+    if (!response || !response.text) {
+      throw new Error("La IA respondió vacío");
     }
-  });
-  
-  return JSON.parse(response.text);
+
+    const cleanJson = response.text.trim();
+    console.log("[Billy AI] Respuesta recibida:", cleanJson);
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("[Billy AI] Error crítico en el servicio:", error);
+    throw error;
+  }
 };
