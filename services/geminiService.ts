@@ -2,16 +2,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const analyzeBillImage = async (base64Data: string, mimeType: string) => {
-  // Inicialización directa con la API KEY del entorno
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  // Normalización estricta de MimeType
   let finalMimeType = mimeType;
   if (mimeType.includes('pdf')) finalMimeType = 'application/pdf';
   else if (mimeType.includes('image')) finalMimeType = mimeType;
   else finalMimeType = 'image/jpeg';
 
-  console.log(`[Billy AI] Iniciando análisis. Tipo: ${finalMimeType}, Tamaño base64: ${base64Data.length} chars`);
+  console.log(`[Billy AI] Analizando: ${finalMimeType}`);
 
   try {
     const response = await ai.models.generateContent({
@@ -25,13 +23,16 @@ export const analyzeBillImage = async (base64Data: string, mimeType: string) => 
             },
           },
           {
-            text: `AUDITORÍA DE GASTOS. Extrae los datos de este documento. 
-            Si no estás seguro de algún campo, inventa una estimación lógica basada en el contexto del documento.
-            Campos necesarios: proveedor, importe (amount), fecha (date), categoría (category), fecha de renovación (renewalDate).
+            text: `Eres Billy, un experto en auditoría de facturas españolas. 
+            Tu misión es extraer datos de este documento (PDF o Imagen). 
+            Busca: Proveedor (empresa), Importe Total (con decimales), Fecha de factura, Categoría y Fecha de renovación.
             
-            Formatos de categoría permitidos: Luz, Agua, Gas, Seguros, Coche, Moto, Suscripción, Otros.
+            Categorías: Luz, Agua, Gas, Seguros, Coche, Moto, Suscripción, Otros.
             
-            Responde ÚNICAMENTE un JSON válido.`,
+            Evalúa el precio: si es caro pon "AVISO BILLY", si es bueno "PRECIO TOP".
+            Escribe un consejo corto (billyAdvice) sobre cómo ahorrar en este gasto concreto.
+            
+            Responde exclusivamente en JSON.`,
           },
         ],
       }],
@@ -45,7 +46,7 @@ export const analyzeBillImage = async (base64Data: string, mimeType: string) => 
             date: { type: Type.STRING },
             renewalDate: { type: Type.STRING },
             category: { type: Type.STRING },
-            priceRating: { type: Type.STRING, description: "PRECIO TOP, PRECIO NORMAL o AVISO BILLY" },
+            priceRating: { type: Type.STRING },
             billyAdvice: { type: Type.STRING },
             action: { type: Type.STRING }
           },
@@ -54,15 +55,13 @@ export const analyzeBillImage = async (base64Data: string, mimeType: string) => 
       }
     });
 
-    if (!response || !response.text) {
-      throw new Error("La IA respondió vacío");
-    }
+    if (!response || !response.text) throw new Error("No hay respuesta de la IA");
 
     const cleanJson = response.text.trim();
-    console.log("[Billy AI] Respuesta recibida:", cleanJson);
+    console.log("[Billy AI] Resultado:", cleanJson);
     return JSON.parse(cleanJson);
   } catch (error) {
-    console.error("[Billy AI] Error crítico en el servicio:", error);
-    throw error;
+    console.error("[Billy AI] Error:", error);
+    throw new Error("No he podido leer bien ese archivo. Prueba a subir uno más legible.");
   }
 };
